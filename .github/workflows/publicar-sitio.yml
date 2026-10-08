@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'sitio/**'
-      - tools/verificar-sitio.mjs
+      - 'tools/**'
       - .github/workflows/publicar-sitio.yml
   workflow_dispatch:
 
@@ -26,6 +26,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Comprobar catálogo y archivos del sitio
         run: node tools/verificar-sitio.mjs
+      - name: Comprobar confirmaciones y fallos del formulario
+        run: node tools/verificar-formulario.mjs
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
       - name: Cargar sitio

@@ -2319,6 +2319,9 @@ function setFormStatus(message, state = "") {
 
 quoteForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (quoteSubmitButton.disabled || !quoteForm.reportValidity()) {
+        return;
+    }
     const formData = new FormData(quoteForm);
 
     if (formData.get("_honey")) {
@@ -2341,12 +2344,16 @@ quoteForm.addEventListener("submit", async (event) => {
         Teléfono: formData.get("phone"),
         Ciudad: formData.get("city"),
         Sector: formData.get("sector"),
-        Necesidad: formData.get("message")
+        Necesidad: formData.get("message"),
+        Origen: "Página web de EXTINT S.E.E.D",
+        "Página de contacto": `${window.location.origin}${window.location.pathname}`
     };
 
     quoteSubmitButton.disabled = true;
     quoteSubmitLabel.textContent = "Enviando solicitud…";
     setFormStatus("Estamos procesando tu solicitud.");
+    const requestController = new AbortController();
+    const requestTimeout = window.setTimeout(() => requestController.abort(), 25000);
 
     try {
         const response = await fetch(FORM_ENDPOINT, {
@@ -2355,11 +2362,12 @@ quoteForm.addEventListener("submit", async (event) => {
                 "Content-Type": "application/json",
                 Accept: "application/json"
             },
-            body: JSON.stringify(submission)
+            body: JSON.stringify(submission),
+            signal: requestController.signal
         });
 
         const result = await response.json().catch(() => ({}));
-        if (!response.ok || result.success === false || result.success === "false") {
+        if (!response.ok || (result.success !== true && result.success !== "true")) {
             throw new Error(result.message || `El servicio respondió con estado ${response.status}`);
         }
 
@@ -2367,8 +2375,12 @@ quoteForm.addEventListener("submit", async (event) => {
         setFormStatus("Solicitud enviada correctamente. Nuestro equipo se comunicará contigo.", "success");
     } catch (error) {
         console.error("No se pudo enviar la solicitud:", error);
-        setFormStatus("No fue posible enviar la solicitud. Inténtalo nuevamente o escríbenos a extintseed@hotmail.com.", "error");
+        const errorMessage = error.name === "AbortError"
+            ? "No pudimos confirmar el envío a tiempo. Tus datos siguen en el formulario. Puedes consultar a extintseed@hotmail.com antes de reenviar."
+            : "No fue posible confirmar el envío. Tus datos siguen en el formulario. Inténtalo nuevamente o escríbenos a extintseed@hotmail.com.";
+        setFormStatus(errorMessage, "error");
     } finally {
+        window.clearTimeout(requestTimeout);
         quoteSubmitButton.disabled = false;
         quoteSubmitLabel.textContent = "Enviar solicitud";
     }
