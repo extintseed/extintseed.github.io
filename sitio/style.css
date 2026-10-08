@@ -1189,6 +1189,9 @@ h2,
 .category-sidebar {
     position: sticky;
     top: calc(var(--header-height) + 24px);
+    max-height: calc(100dvh - var(--header-height) - 48px);
+    overflow-y: auto;
+    scrollbar-width: thin;
     padding: 22px;
 }
 
@@ -2505,6 +2508,8 @@ h2,
 
     .category-sidebar {
         position: static;
+        max-height: none;
+        overflow-y: visible;
     }
 
     .category-list {
