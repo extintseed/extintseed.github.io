@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - extintseed-site.zip
+      - 'sitio/**'
+      - tools/verificar-sitio.mjs
       - .github/workflows/publicar-sitio.yml
   workflow_dispatch:
 
@@ -23,17 +24,14 @@ jobs:
     steps:
       - name: Obtener repositorio
         uses: actions/checkout@v6
-      - name: Preparar archivos del sitio
-        run: |
-          mkdir -p _site
-          unzip -q extintseed-site.zip -d _site
-          rm -rf _site/.git _site/.github
+      - name: Comprobar catálogo y archivos del sitio
+        run: node tools/verificar-sitio.mjs
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
       - name: Cargar sitio
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./_site
+          path: ./sitio
 
   deploy:
     environment:
